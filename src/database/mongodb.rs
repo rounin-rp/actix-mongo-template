@@ -4,15 +4,28 @@ use mongodb::Client;
 #[derive(Default, Clone)]
 pub struct Url(String);
 
+impl Url {
+    pub fn new(url: impl Into<String>) -> Self {
+        Self(url.into())
+    }
+}
+
 #[derive(Default, Clone)]
 pub struct NoUrl;
 
 #[derive(Default, Clone)]
 pub struct DbName(String);
 
+impl DbName {
+    pub fn new(db_name: impl Into<String>) -> Self {
+        Self(db_name.into())
+    }
+}
+
 #[derive(Default, Clone)]
 pub struct NoDbName;
 
+#[derive(Clone)]
 pub struct MongoClient {
     pub url: String,
     pub db_name: String,
