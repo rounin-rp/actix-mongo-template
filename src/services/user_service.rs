@@ -17,3 +17,9 @@ pub async fn create_user(
         .await?;
     Ok(user_model)
 }
+
+pub async fn get_all_users(mongo_client: MongoClient) -> Result<Vec<UserModel>, Errors> {
+    mongo_client
+        .read_many::<UserModel>("users", None, None)
+        .await
+}

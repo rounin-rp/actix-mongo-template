@@ -5,7 +5,7 @@ use mongodb::{
     bson::{doc, oid::ObjectId, Document},
     options::{
         AggregateOptions, FindOneAndDeleteOptions, FindOneAndUpdateOptions, FindOneOptions,
-        InsertOneOptions, UpdateModifications,
+        FindOptions, InsertOneOptions, UpdateModifications,
     },
     results::InsertOneResult,
     ClientSession,
@@ -44,21 +44,49 @@ impl MongoClient {
     }
     pub async fn read_one<Model: DeserializeOwned + Serialize + Clone + Sync + Send + Unpin>(
         &self,
-        collection_name: String,
+        collection_name: impl Into<String>,
         data_filter: Document,
         options: Option<FindOneOptions>,
     ) -> Result<Option<Model>, Errors> {
         let collection = self
             .client
             .database(&self.db_name)
-            .collection::<Model>(collection_name.as_str());
+            .collection::<Model>(collection_name.into().as_str());
         let result = collection
             .find_one(data_filter, options)
             .await
             .map_err(|error| Errors::InternalError(error.to_string()))?;
         Ok(result)
     }
+    pub async fn read_many<Model: DeserializeOwned + Serialize + Clone + Sync + Send + Unpin>(
+        &self,
+        collection_name: impl Into<String>,
+        data_filter: Option<Document>,
+        options: Option<FindOptions>,
+    ) -> Result<Vec<Model>, Errors> {
+        let collection = self
+            .client
+            .database(&self.db_name)
+            .collection::<Model>(collection_name.into().as_str());
+        let mut cursor = collection
+            .find(data_filter, options)
+            .await
+            .map_err(|error| Errors::InternalError(error.to_string()))?;
+        let mut result_vector = Vec::new();
 
+        while cursor
+            .advance()
+            .await
+            .map_err(|error| Errors::InternalError(error.to_string()))?
+        {
+            let doc = cursor
+                .deserialize_current()
+                .map_err(|error| Errors::InternalError(error.to_string()))?;
+
+            result_vector.push(doc);
+        }
+        Ok(result_vector)
+    }
     pub async fn update_one<Model: DeserializeOwned>(
         &self,
         collection_name: String,
