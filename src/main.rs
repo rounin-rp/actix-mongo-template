@@ -8,8 +8,11 @@ use std::env;
 
 pub mod database;
 pub mod handlers;
+pub mod helpers;
+pub mod models;
+pub mod routes;
+pub mod services;
 pub mod traits;
-
 #[get("/health-check")]
 async fn health_check() -> impl Responder {
     HttpResponse::Ok().body("Ok")
@@ -50,6 +53,7 @@ async fn main() -> std::io::Result<()> {
             )
             .app_data(web::Data::new(mongo_client.clone()))
             .service(health_check)
+            .service(routes::routes())
     })
     .bind(("127.0.0.1", 8080))?
     .run()

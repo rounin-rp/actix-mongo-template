@@ -16,7 +16,7 @@ impl MongoClient {
     pub async fn create_one<M: DeserializeOwned + Serialize + Clone + ModelTrait>(
         &self,
         collection_name: impl Into<String>,
-        mut model: M,
+        model: &mut M,
         options: Option<InsertOneOptions>,
         session: Option<ClientSession>,
     ) -> Result<InsertOneResult, Errors> {
