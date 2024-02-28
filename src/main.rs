@@ -1,6 +1,9 @@
 use actix_cors::Cors;
-use actix_web::{get, middleware::Logger, web, App, HttpResponse, HttpServer, Responder};
+use actix_web::{
+    dev::Service as _, get, middleware::Logger, web, App, HttpResponse, HttpServer, Responder,
+};
 use database::mongodb::{DbName, MongoClient, MongoClientBuilder, Url};
+use futures_util::future::FutureExt;
 
 use env_logger::Env;
 use handlers::error_handler::Errors;
@@ -9,6 +12,7 @@ pub mod config;
 pub mod database;
 pub mod handlers;
 pub mod helpers;
+pub mod middleware;
 pub mod models;
 pub mod routes;
 pub mod services;
