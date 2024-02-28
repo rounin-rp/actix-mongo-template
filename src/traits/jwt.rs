@@ -1,9 +1,8 @@
 use crate::{
-    database::mongodb::MongoClient,
     handlers::error_handler::{Errors, HttpErrors},
     helpers::enums,
 };
-use actix_web::{http, web, FromRequest};
+use actix_web::{http, FromRequest};
 use chrono::{Duration, Utc};
 use jsonwebtoken::{decode, encode, Algorithm, DecodingKey, EncodingKey, Header, Validation};
 use serde::{Deserialize, Serialize};
@@ -88,6 +87,7 @@ impl FromRequest for JwtToken {
             None => return ready(Err(Errors::HttpError(HttpErrors::BadRequest))),
         };
         */
+
         ready(Ok(decoded_token_result))
     }
 }

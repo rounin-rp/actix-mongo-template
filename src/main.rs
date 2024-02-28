@@ -1,11 +1,11 @@
 use actix_cors::Cors;
 use actix_web::{get, middleware::Logger, web, App, HttpResponse, HttpServer, Responder};
 use database::mongodb::{DbName, MongoClient, MongoClientBuilder, Url};
-use dotenv::dotenv;
+
 use env_logger::Env;
 use handlers::error_handler::Errors;
-use std::env;
 
+pub mod config;
 pub mod database;
 pub mod handlers;
 pub mod helpers;
@@ -13,18 +13,17 @@ pub mod models;
 pub mod routes;
 pub mod services;
 pub mod traits;
+
+use crate::config::{DATABASE_NAME, MONGO_URI};
+
 #[get("/health-check")]
 async fn health_check() -> impl Responder {
     HttpResponse::Ok().body("Ok")
 }
 
 async fn build_mongo_client() -> Result<MongoClient, Errors> {
-    dotenv().ok();
-    let mongo_uri = env::var("MONGO_URI").unwrap_or_default();
-    let database_name = env::var("DATABASE_NAME").unwrap_or_default();
-
-    let url = Url::new(mongo_uri);
-    let db_name = DbName::new(database_name);
+    let url = Url::new(MONGO_URI.to_string());
+    let db_name = DbName::new(DATABASE_NAME.to_string());
 
     MongoClientBuilder::<Url, DbName>::url(url, db_name)
         .await?
@@ -33,6 +32,7 @@ async fn build_mongo_client() -> Result<MongoClient, Errors> {
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
+    config::load_env();
     env_logger::init_from_env(Env::default().default_filter_or("info"));
     let mongo_client = build_mongo_client()
         .await

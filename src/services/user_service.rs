@@ -1,12 +1,9 @@
 use crate::{
-    database::{core_service, mongodb::MongoClient},
+    database::{mongodb::MongoClient},
     handlers::error_handler::Errors,
     models::user::*,
 };
-use mongodb::{
-    bson::{self, doc},
-    options::UpdateModifications,
-};
+
 pub async fn create_user(
     mongo_client: MongoClient,
     input: UserCreateModel,

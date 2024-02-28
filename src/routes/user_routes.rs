@@ -1,11 +1,12 @@
 use crate::handlers::error_handler::Errors;
 use crate::models::user::UserModel;
+use crate::traits::jwt::JwtToken;
 use crate::{
     database::mongodb::MongoClient, models::user::UserCreateModel, services::user_service,
 };
 use actix_web::{get, post, web, HttpResponse, Responder, ResponseError};
 use serde::de::DeserializeOwned;
-use serde::{Deserialize, Serialize};
+use serde::Serialize;
 
 #[get("/health-check")]
 async fn health_check() -> impl Responder {
@@ -25,7 +26,10 @@ pub async fn create_user(
 }
 
 #[get("/all")]
-pub async fn get_all_users(mongo_client: web::Data<MongoClient>) -> impl Responder {
+pub async fn get_all_users(
+    auth_token: JwtToken,
+    mongo_client: web::Data<MongoClient>,
+) -> impl Responder {
     let response = user_service::get_all_users(mongo_client.get_ref().clone()).await;
     handle_json_response::<Vec<UserModel>>(response)
 }
