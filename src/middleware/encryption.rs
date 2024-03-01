@@ -2,13 +2,16 @@ use crate::{
     config::{ENABLE_ENCRYPTION, ENCRYPTION_KEY},
     handlers::error_handler::Errors,
 };
-use std::future::{ready, Ready};
-
+use actix_http::h1;
 use actix_web::{
-    dev::{forward_ready, Service, ServiceRequest, ServiceResponse, Transform},
-    Error,
+    dev::{forward_ready, Payload, Service, ServiceRequest, ServiceResponse, Transform},
+    web, Error,
 };
 use futures_util::future::LocalBoxFuture;
+use std::{
+    future::{ready, Ready},
+    rc::Rc,
+};
 
 // There are two steps in middleware processing.
 // 1. Middleware initialization, middleware factory gets called with
@@ -32,12 +35,14 @@ where
     type Future = Ready<Result<Self::Transform, Self::InitError>>;
 
     fn new_transform(&self, service: S) -> Self::Future {
-        ready(Ok(EncryptionMiddleware { service }))
+        ready(Ok(EncryptionMiddleware {
+            service: Rc::new(service),
+        }))
     }
 }
 
 pub struct EncryptionMiddleware<S> {
-    service: S,
+    service: Rc<S>,
 }
 
 impl<S, B> Service<ServiceRequest> for EncryptionMiddleware<S>
@@ -52,16 +57,24 @@ where
 
     forward_ready!(service);
 
-    fn call(&self, req: ServiceRequest) -> Self::Future {
+    fn call(&self, mut req: ServiceRequest) -> Self::Future {
         println!("Hi from start. You requested: {}", req.path());
-
-        let fut = self.service.call(req);
-
+        let svc = self.service.clone();
         Box::pin(async move {
-            let res = fut.await?;
+            let body = req.extract::<web::Bytes>().await.unwrap();
+            println!("request body (middleware): {body:?}");
+            //let res = fut.await?;
+            //req.set_payload(bytes_to_payload(body));
 
+            let res = svc.call(req).await?;
             println!("Hi from response");
             Ok(res)
         })
     }
+}
+
+fn bytes_to_payload(buf: web::Bytes) -> Payload {
+    let (_, mut pl) = h1::Payload::create(true);
+    pl.unread_data(buf);
+    Payload::from(pl)
 }

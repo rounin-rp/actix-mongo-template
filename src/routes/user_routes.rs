@@ -27,18 +27,11 @@ pub async fn create_user(
 
 #[get("/all")]
 pub async fn get_all_users(
-    auth_token: JwtToken,
+    //auth_token: JwtToken,
     mongo_client: web::Data<MongoClient>,
 ) -> impl Responder {
-    let response = user_service::get_all_users(mongo_client.get_ref().clone()).await;
-    handle_json_response::<Vec<UserModel>>(response)
-}
-
-fn handle_json_response<Model: Serialize + DeserializeOwned + Clone>(
-    response: Result<Model, Errors>,
-) -> impl Responder {
-    match response {
-        Ok(message) => HttpResponse::Created().json(message),
+    match user_service::get_all_users(mongo_client.get_ref().clone()).await {
+        Ok(message) => HttpResponse::Ok().json(message),
         Err(error) => error.error_response(),
     }
 }

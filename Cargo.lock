@@ -88,6 +88,7 @@ name = "actix-mongo-template"
 version = "0.1.0"
 dependencies = [
  "actix-cors",
+ "actix-http",
  "actix-web",
  "chrono",
  "derive_more",

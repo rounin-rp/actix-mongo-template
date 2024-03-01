@@ -45,8 +45,8 @@ async fn main() -> std::io::Result<()> {
     HttpServer::new(move || {
         let logger = Logger::default();
         App::new()
-            .wrap(logger)
-            .wrap(Logger::new("%a %{User-Agent}i"))
+            //.wrap(logger)
+            //.wrap(Logger::new("%a %{User-Agent}i"))
             .wrap(
                 Cors::default()
                     .allow_any_origin()
@@ -55,6 +55,7 @@ async fn main() -> std::io::Result<()> {
                     .supports_credentials()
                     .max_age(3600),
             )
+            .wrap(middleware::encryption::Encryption)
             .app_data(web::Data::new(mongo_client.clone()))
             .service(health_check)
             .service(routes::routes())
